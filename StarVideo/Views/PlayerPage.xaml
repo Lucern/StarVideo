@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="StarVideo.Views.PlayerPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="#FF05060A">
+
+    <!-- 单层布局：视频画面始终铺满整页，所有浮层都叠加在画面之上。
+         控制条显隐只改 Opacity + IsHitTestVisible，绝不改变视频区域尺寸，
+         避免 MediaPlayerElement 的交换链被重建而出现白块 / 画面跳动。 -->
+    <Grid x:Name="Root" Background="Transparent"
+          PointerMoved="OnPointerMoved" DoubleTapped="OnDoubleTapped">
+
+        <!-- ==================== 画面区 ==================== -->
+        <!-- Tapped 挂在画面容器上：视频层、占位图标/文字、透明命中层的点击都会冒泡到这里；
+             顶部浮层 / 底部控制条 / 选集面板是兄弟元素，点击它们不会冒泡进来。 -->
+        <Grid x:Name="VideoHost" Background="#FF05060A" Tapped="OnVideoAreaTapped">
+            <Border x:Name="PlaceholderBackdrop" />
+            <Border x:Name="DimLayer" Background="#99060810" />
+
+            <!-- 透明命中层：保证视频表面（交换链）任何位置都能被点击命中。
+                 位于视频层之上、占位提示 / 转码面板之下，因此不抢占占位区按钮的点击。 -->
+            <Border x:Name="VideoTapArea" Background="Transparent" />
+
+            <!-- 占位提示不再放任何圆形"播放"图标：画面中央保持干净，播放/暂停一律靠点击画面 -->
+            <StackPanel x:Name="PlaceholderInfo" HorizontalAlignment="Center"
+                        VerticalAlignment="Center" Spacing="16" MaxWidth="520">
+                <TextBlock x:Name="PlaceholderTitle" Text="" FontSize="28" FontWeight="Bold"
+                           Foreground="White" HorizontalAlignment="Center" />
+                <TextBlock x:Name="PlaceholderHint" Text="" FontSize="13" Foreground="#AEB4C4"
+                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                    <Button Content="打开本地视频文件" Style="{StaticResource AccentButtonStyle}"
+                            Click="OnOpenLocalFile" ToolTipService.ToolTip="支持 mp4 / mkv / avi / mov / ts 等任意格式" />
+                    <Button Content="播放在线测试片源" Style="{StaticResource GhostButtonStyle}"
+                            Click="OnPlayDefaultOnline" ToolTipService.ToolTip="播放内置公开测试视频" />
+                </StackPanel>
+                <TextBlock Text="本地视频由 FFmpeg 自动探测编码；不兼容的格式会重封装或转码后播放。也可以直接把文件拖进窗口。"
+                           FontSize="11.5" Foreground="#7F8594" HorizontalAlignment="Center"
+                           TextAlignment="Center" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <!-- FFmpeg 转码进度 -->
+            <Border x:Name="TranscodePanel" Visibility="Collapsed" Width="440" Padding="26,22"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Background="#E6101118" CornerRadius="14"
+                    BorderBrush="#33FFFFFF" BorderThickness="1">
+                <StackPanel Spacing="14">
+                    <TextBlock x:Name="TranscodeTitle" Text="FFmpeg 正在准备视频" FontSize="18"
+                               FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="TranscodeDetail" Text="" FontSize="12" Foreground="#AEB4C4"
+                               HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                    <ProgressBar x:Name="TranscodeBar" Minimum="0" Maximum="100" Value="0" />
+                    <TextBlock x:Name="TranscodePercent" Text="0%" FontSize="12.5"
+                               Foreground="#FFFFB44A" HorizontalAlignment="Center" />
+                    <Button x:Name="CancelTranscodeButton" Content="取消" HorizontalAlignment="Center"
+                            Style="{StaticResource ChipButtonStyle}" Click="OnCancelTranscode" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ==================== 顶部浮层 ==================== -->
+        <Grid x:Name="TopOverlay" VerticalAlignment="Top" Height="72"
+              Background="{StaticResource PosterShadeBrush}" Padding="22,0">
+            <Grid.OpacityTransition>
+                <ScalarTransition Duration="0:0:0.18" />
+            </Grid.OpacityTransition>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <!-- 右侧让给系统标题栏按钮（最小化 / 最大化 / 关闭）。
+                     全屏按钮已移到底部控制条，这里不再放任何控件，避免与系统关闭按钮重叠。 -->
+                <ColumnDefinition x:Name="CaptionSpacerColumn" Width="146" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Style="{StaticResource IconButtonStyle}"
+                    Width="40" Height="40" Click="OnBackClick" ToolTipService.ToolTip="返回上一页">
+                <FontIcon Glyph="&#xE72B;" FontSize="16" Foreground="White" />
+            </Button>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0" Spacing="3">
+                <TextBlock x:Name="VideoTitle" Text="" FontSize="17" FontWeight="SemiBold"
+                           Foreground="White" TextTrimming="CharacterEllipsis" />
+                <TextBlock x:Name="VideoSubtitle" Text="" FontSize="11.5" Foreground="#AEB4C4" />
+            </StackPanel>
+        </Grid>
+
+        <!-- ==================== 底部控制条（悬浮叠加，不参与布局） ==================== -->
+        <Border x:Name="ControlBar" VerticalAlignment="Bottom" Padding="22,30,22,14">
+            <Border.OpacityTransition>
+                <ScalarTransition Duration="0:0:0.18" />
+            </Border.OpacityTransition>
+            <Border.Background>
+                <!-- 顶部完全透明，避免隐藏/显示时出现一块不透明的矩形边界 -->
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#00080910" Offset="0" />
+                    <GradientStop Color="#A6080910" Offset="0.45" />
+                    <GradientStop Color="#F2080910" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+            <StackPanel Spacing="6">
+                <Slider x:Name="SeekBar" Minimum="0" Maximum="100" Value="0"
+                        StepFrequency="0.1" ValueChanged="OnSeekChanged" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                        <Button Style="{StaticResource IconButtonStyle}" Click="OnPlayPauseClick"
+                                ToolTipService.ToolTip="播放 / 暂停 (空格，也可直接点击画面)">
+                            <FontIcon x:Name="PlayIcon" Glyph="&#xE768;" FontSize="16" Foreground="White" />
+                        </Button>
+                        <Button Style="{StaticResource IconButtonStyle}" Click="OnPrevEpisode"
+                                ToolTipService.ToolTip="上一集">
+                            <FontIcon Glyph="&#xE892;" FontSize="15" Foreground="White" />
+                        </Button>
+                        <Button Style="{StaticResource IconButtonStyle}" Click="OnNextEpisode"
+                                ToolTipService.ToolTip="下一集">
+                            <FontIcon Glyph="&#xE893;" FontSize="15" Foreground="White" />
+                        </Button>
+                        <TextBlock x:Name="TimeText" Text="00:00 / 45:00" FontSize="12"
+                                   Foreground="#C9CEDA" VerticalAlignment="Center" Margin="10,0,0,0" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="StatusText" Grid.Column="1" Text="演示播放中"
+                               FontSize="11.5" Foreground="#7F8594"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                        <FontIcon Glyph="&#xE767;" FontSize="14" Foreground="#AEB4C4"
+                                  VerticalAlignment="Center" />
+                        <Slider x:Name="VolumeBar" Minimum="0" Maximum="100" Value="80"
+                                Width="82" ValueChanged="OnVolumeChanged" />
+                        <Button x:Name="SpeedButton" Style="{StaticResource IconButtonStyle}"
+                                Width="48" Content="1.0x" FontSize="11.5" Foreground="White"
+                                Click="OnSpeedClick" ToolTipService.ToolTip="倍速" />
+                        <Button Style="{StaticResource IconButtonStyle}" Width="58"
+                                Content="本地视频" FontSize="11.5" Foreground="White"
+                                Click="OnOpenLocalFile" ToolTipService.ToolTip="打开本地视频" />
+                        <Button Style="{StaticResource IconButtonStyle}" Width="48"
+                                Content="在线" FontSize="11.5" Foreground="White"
+                                ToolTipService.ToolTip="在线测试片源 / 自定义视频地址">
+                            <Button.Flyout>
+                                <Flyout x:Name="OnlineFlyout" Placement="Top"
+                                        Opening="OnOnlineFlyoutOpening">
+                                    <StackPanel Width="340" Spacing="10">
+                                        <TextBlock Text="在线测试片源" FontSize="16" FontWeight="SemiBold"
+                                                   Foreground="{ThemeResource TextPrimaryBrush}" />
+                                        <TextBlock Text="以下均为公开测试视频，需联网播放。点击即可切换；也可粘贴自己的 MP4 / HLS(m3u8) 地址。"
+                                                   FontSize="11.5" Foreground="{ThemeResource TextMutedBrush}"
+                                                   TextWrapping="Wrap" />
+                                        <StackPanel x:Name="OnlinePresetPanel" Spacing="6" />
+                                        <Border Height="1" Background="{ThemeResource BorderBrush}" Margin="0,4" />
+                                        <TextBlock Text="自定义地址" FontSize="12.5" FontWeight="SemiBold"
+                                                   Foreground="{ThemeResource TextPrimaryBrush}" />
+                                        <TextBox x:Name="CustomUrlBox"
+                                                 PlaceholderText="https://example.com/video.mp4 或 .m3u8" />
+                                        <Button Content="播放自定义地址" HorizontalAlignment="Stretch"
+                                                Style="{StaticResource AccentButtonStyle}"
+                                                Click="OnPlayCustomUrl" />
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                        <Button x:Name="EpisodeToggle" Style="{StaticResource IconButtonStyle}"
+                                Width="56" Content="选集" FontSize="11.5" Foreground="White"
+                                Click="OnToggleEpisodes" />
+                        <!-- 全屏按钮从顶部浮层移到这里：右上角留给系统的最小化/最大化/关闭按钮 -->
+                        <Button x:Name="FullScreenButton" Style="{StaticResource IconButtonStyle}"
+                                Width="40" Click="OnFullScreenClick" ToolTipService.ToolTip="全屏（也可双击画面）">
+                            <FontIcon x:Name="FullScreenIcon" Glyph="&#xE740;" FontSize="15" Foreground="White" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ==================== 右侧选集面板 ==================== -->
+        <Border x:Name="EpisodePanel" Width="330"
+                HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                Background="#F2101118" BorderBrush="#FF2B2E3B" BorderThickness="1,0,0,0"
+                Visibility="Collapsed">
+            <Grid Padding="18,20,18,20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <TextBlock Text="选集" FontSize="18" FontWeight="SemiBold" Foreground="White" />
+                    <Button Style="{StaticResource IconButtonStyle}" HorizontalAlignment="Right"
+                            Width="32" Height="32" Click="OnToggleEpisodes">
+                        <FontIcon Glyph="&#xE711;" FontSize="12" Foreground="White" />
+                    </Button>
+                </Grid>
+                <TextBlock x:Name="EpisodePanelHint" Grid.Row="1" Text="" FontSize="11.5"
+                           Foreground="#8B91A1" Margin="0,6,0,14" />
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <Grid x:Name="EpisodePanelGrid" />
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

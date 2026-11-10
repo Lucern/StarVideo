@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="StarVideo.Views.DetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource AppBackgroundBrush}">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
+        <StackPanel>
+            <!-- ==================== 顶部主视觉 ==================== -->
+            <Grid Height="386">
+                <Border x:Name="HeroBackdrop" />
+                <Border Background="{StaticResource BannerShadeBrush}" />
+                <Border Background="{StaticResource PosterShadeBrush}" />
+
+                <Grid Padding="40,0,40,28" VerticalAlignment="Bottom" ColumnSpacing="26">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border x:Name="HeroPoster" Grid.Column="0" Width="152" Height="214"
+                            CornerRadius="10" BorderBrush="#55FFFFFF" BorderThickness="1"
+                            VerticalAlignment="Bottom" />
+
+                    <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Bottom">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="{Binding Title}" FontSize="34" FontWeight="Bold"
+                                       Foreground="White" TextTrimming="CharacterEllipsis" />
+                            <Border VerticalAlignment="Center" Background="#E6FF7A18"
+                                    CornerRadius="4" Padding="8,3"
+                                    Visibility="{Binding HasBadge, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding CornerBadge}" FontSize="11"
+                                           FontWeight="SemiBold" Foreground="White" />
+                            </Border>
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding En}" FontSize="12.5"
+                                   Foreground="#A9FFFFFF" TextTrimming="CharacterEllipsis" />
+
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="{Binding ScoreText}" FontSize="24" FontWeight="Bold"
+                                       Foreground="#FFFFC24A" />
+                            <TextBlock Text="分" FontSize="12" Foreground="#CCFFFFFF"
+                                       VerticalAlignment="Bottom" Margin="-8,0,0,4" />
+                            <TextBlock Text="{Binding MetaText}" FontSize="13"
+                                       Foreground="#DCE0EA" VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                            <TextBlock Text="{Binding HotText}" FontSize="12"
+                                       Foreground="#A9FFFFFF" VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                            <TextBlock Text="热度" FontSize="11"
+                                       Foreground="#A9FFFFFF" VerticalAlignment="Bottom" Margin="-8,0,0,3" />
+                        </StackPanel>
+
+                        <TextBlock Text="{Binding TagsText}" FontSize="12"
+                                   Foreground="#C8CDDA" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Tagline}" FontSize="13"
+                                   Foreground="#E7E9F0" TextTrimming="CharacterEllipsis" />
+
+                        <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,10,0,0">
+                            <Button Style="{StaticResource AccentButtonStyle}" Click="OnPlayClick">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE768;" FontSize="13" Foreground="White" />
+                                    <TextBlock x:Name="PlayButtonText" Text="立即播放" Foreground="White"
+                                               FontSize="14" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Name="FavoriteButton" Style="{StaticResource GhostButtonStyle}"
+                                    Click="OnFavoriteClick" Content="☆ 收藏" />
+                            <Button Style="{StaticResource GhostButtonStyle}"
+                                    Click="OnShareClick" Content="分享" />
+                            <Button Style="{StaticResource GhostButtonStyle}"
+                                    Click="OnBackClick" Content="返回" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <!-- ==================== 正文 ==================== -->
+            <StackPanel Padding="40,26,40,48" Spacing="30">
+                <Grid ColumnSpacing="40">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="300" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Spacing="10">
+                        <TextBlock Text="剧情简介" Style="{StaticResource SectionTitleStyle}" />
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource BodyTextStyle}" />
+                        <TextBlock Text="{Binding TagsText}" FontSize="12"
+                                   Foreground="{ThemeResource AccentBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Spacing="10">
+                        <TextBlock Text="演职员" Style="{StaticResource SectionTitleStyle}" />
+                        <TextBlock Text="{Binding CastText}" Style="{StaticResource BodyTextStyle}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="集数 / 时长" FontSize="12"
+                                       Foreground="{ThemeResource TextMutedBrush}" />
+                            <TextBlock Text="{Binding Duration}" FontSize="12"
+                                       Foreground="{ThemeResource TextSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 选集 -->
+                <StackPanel x:Name="EpisodeSection" Spacing="14">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="选集" Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock x:Name="EpisodeCountText" Text="" FontSize="12"
+                                       Foreground="{ThemeResource TextMutedBrush}"
+                                       VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                        </StackPanel>
+                        <TextBlock x:Name="EpisodeHint" Text="" FontSize="12" HorizontalAlignment="Right"
+                                   VerticalAlignment="Bottom"
+                                   Foreground="{ThemeResource TextMutedBrush}" />
+                    </Grid>
+                    <StackPanel x:Name="EpisodeRows" Spacing="8" />
+                </StackPanel>
+
+                <!-- 猜你喜欢 -->
+                <StackPanel Spacing="14">
+                    <TextBlock Text="猜你喜欢" Style="{StaticResource SectionTitleStyle}" />
+                    <GridView x:Name="RelatedGrid"
+                              ItemTemplate="{StaticResource PosterCardTemplate}"
+                              ItemContainerStyle="{StaticResource CardItemStyle}"
+                              SelectionMode="None" ItemClick="OnRelatedClick" />
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

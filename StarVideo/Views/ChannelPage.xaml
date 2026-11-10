@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="StarVideo.Views.ChannelPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource AppBackgroundBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Padding="32,24,32,0" Spacing="6">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock x:Name="TitleText" Text="频道" Style="{StaticResource PageTitleStyle}" />
+                <Border VerticalAlignment="Center" Background="{ThemeResource AccentBrush}"
+                        CornerRadius="4" Padding="8,3">
+                    <TextBlock x:Name="CountBadge" Text="" FontSize="11" Foreground="White" />
+                </Border>
+            </StackPanel>
+            <TextBlock x:Name="SummaryText" Text="" Style="{StaticResource MutedTextStyle}" />
+        </StackPanel>
+
+        <!-- 筛选区 -->
+        <Border Grid.Row="1" Margin="32,18,32,10" Background="{ThemeResource SurfaceBrush}"
+                CornerRadius="12" Padding="18,14">
+            <StackPanel Spacing="10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="类型" FontSize="12.5" VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextMutedBrush}" />
+                    <ScrollViewer Grid.Column="1" HorizontalScrollMode="Enabled"
+                                  HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled">
+                        <StackPanel x:Name="GenreChips" Orientation="Horizontal" />
+                    </ScrollViewer>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="地区" FontSize="12.5" VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextMutedBrush}" />
+                    <ScrollViewer Grid.Column="1" HorizontalScrollMode="Enabled"
+                                  HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled">
+                        <StackPanel x:Name="RegionChips" Orientation="Horizontal" />
+                    </ScrollViewer>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="年份" FontSize="12.5" VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextMutedBrush}" />
+                    <ScrollViewer Grid.Column="1" HorizontalScrollMode="Enabled"
+                                  HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled">
+                        <StackPanel x:Name="YearChips" Orientation="Horizontal" />
+                    </ScrollViewer>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="排序" FontSize="12.5" VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextMutedBrush}" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <StackPanel x:Name="SortChips" Orientation="Horizontal" />
+                        <Border Width="1" Margin="12,2,12,2" Background="{ThemeResource BorderBrush}" />
+                        <StackPanel x:Name="VipChips" Orientation="Horizontal" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- 结果 -->
+        <Grid Grid.Row="2" Margin="26,4,26,24">
+            <GridView x:Name="ResultGrid" ItemTemplate="{StaticResource PosterCardTemplate}"
+                      ItemContainerStyle="{StaticResource CardItemStyle}"
+                      SelectionMode="None" ItemClick="OnItemClick" />
+            <StackPanel x:Name="EmptyState" Visibility="Collapsed" Spacing="12"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <FontIcon Glyph="&#xE721;" FontSize="42"
+                          Foreground="{ThemeResource TextMutedBrush}" />
+                <TextBlock Text="没有符合条件的作品" FontSize="15"
+                           Foreground="{ThemeResource TextMutedBrush}" />
+                <Button Content="重置筛选" HorizontalAlignment="Center" Click="OnReset"
+                        Style="{StaticResource AccentButtonStyle}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

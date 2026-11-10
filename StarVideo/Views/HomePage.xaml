@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="StarVideo.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource AppBackgroundBrush}">
+
+    <ScrollViewer VerticalScrollMode="Auto" VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Padding="32,22,32,48" Spacing="30">
+
+            <!-- ==================== 焦点轮播 ==================== -->
+            <Grid Height="356" CornerRadius="14" BorderBrush="{ThemeResource BorderBrush}" BorderThickness="1">
+                <FlipView x:Name="BannerFlip" SelectionChanged="OnBannerChanged" Background="#FF10121A">
+                    <FlipView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Image Source="{Binding BannerPath, Converter={StaticResource ImagePath}}"
+                                       Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </FlipView.ItemTemplate>
+                </FlipView>
+
+                <Border Background="{StaticResource BannerShadeBrush}" IsHitTestVisible="False" />
+                <Border VerticalAlignment="Bottom" Height="130" IsHitTestVisible="False">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#0007080D" Offset="0" />
+                            <GradientStop Color="#9907080D" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+
+                <StackPanel x:Name="BannerInfo" VerticalAlignment="Bottom" Margin="44,0,0,32"
+                            MaxWidth="620" Spacing="9">
+                    <Border HorizontalAlignment="Left" Background="{StaticResource AccentGradientBrush}"
+                            CornerRadius="4" Padding="9,4">
+                        <TextBlock Text="重磅推荐" FontSize="11" FontWeight="Bold" Foreground="White" />
+                    </Border>
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource HeroTitleStyle}" />
+                    <TextBlock Text="{Binding En}" FontSize="12" Foreground="#BFFFFFFF" />
+                    <TextBlock Text="{Binding Tagline}" FontSize="15" Foreground="#FFE7E9F2" />
+                    <TextBlock Text="{Binding MetaText}" FontSize="12" Foreground="#B5FFFFFF" />
+                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,10,0,0">
+                        <Button Content="▶  立即播放" Style="{StaticResource AccentButtonStyle}"
+                                Click="OnBannerPlay" />
+                        <Button Content="查看详情" Style="{StaticResource GhostButtonStyle}"
+                                Click="OnBannerDetail" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel x:Name="BannerDots" Orientation="Horizontal" Spacing="5"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,28,26" />
+            </Grid>
+
+            <!-- ==================== 快捷分类入口 ==================== -->
+            <Border Background="{ThemeResource SurfaceBrush}" CornerRadius="12" Padding="18,14">
+                <Grid x:Name="QuickGrid">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                </Grid>
+            </Border>
+
+            <!-- ==================== 继续观看 ==================== -->
+            <StackPanel x:Name="ContinueSection" Spacing="14">
+                <Grid>
+                    <TextBlock Text="继续观看" Style="{StaticResource SectionTitleStyle}" />
+                    <Button Content="全部历史  ›" HorizontalAlignment="Right" FontSize="12.5"
+                            Foreground="{ThemeResource TextMutedBrush}" Background="Transparent"
+                            BorderThickness="0" Click="OnOpenHistory" />
+                </Grid>
+                <ListView x:Name="ContinueList" ItemTemplate="{StaticResource ContinueCardTemplate}"
+                          ItemContainerStyle="{StaticResource RowItemStyle}"
+                          SelectionMode="None" ItemClick="OnContinueItemClick"
+                          ScrollViewer.HorizontalScrollMode="Enabled"
+                          ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                          ScrollViewer.VerticalScrollMode="Disabled"
+                          ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                </ListView>
+            </StackPanel>
+
+            <!-- ==================== 为你推荐 ==================== -->
+            <StackPanel Spacing="14">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="为你推荐" Style="{StaticResource SectionTitleStyle}" />
+                        <Border VerticalAlignment="Center" Background="{ThemeResource AccentBrush}"
+                                CornerRadius="4" Padding="6,2">
+                            <TextBlock Text="每日更新" FontSize="10" Foreground="White" />
+                        </Border>
+                    </StackPanel>
+                    <Button Content="⟳  换一批" HorizontalAlignment="Right" FontSize="12.5"
+                            Foreground="{ThemeResource TextSecondaryBrush}" Background="Transparent"
+                            BorderThickness="0" Click="OnShuffle" />
+                </Grid>
+                <GridView x:Name="RecommendGrid" ItemTemplate="{StaticResource PosterCardTemplate}"
+                          ItemContainerStyle="{StaticResource CardItemStyle}"
+                          SelectionMode="None" ItemClick="OnPosterItemClick"
+                          ScrollViewer.VerticalScrollMode="Disabled"
+                          ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+            </StackPanel>
+
+            <!-- ==================== 榜单 + 口碑 ==================== -->
+            <Grid ColumnSpacing="26">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="14">
+                    <Grid>
+                        <TextBlock Text="🔥 热播榜" Style="{StaticResource SectionTitleStyle}" />
+                        <Button Content="完整榜单  ›" HorizontalAlignment="Right" FontSize="12.5"
+                                Foreground="{ThemeResource TextMutedBrush}" Background="Transparent"
+                                BorderThickness="0" Click="OnOpenRank" />
+                    </Grid>
+                    <Border Background="{ThemeResource SurfaceBrush}" CornerRadius="12" Padding="6,4">
+                        <ListView x:Name="RankList" ItemTemplate="{StaticResource RankRowTemplate}"
+                                  ItemContainerStyle="{StaticResource RowItemStyle}"
+                                  SelectionMode="None" ItemClick="OnRankItemClick"
+                                  ScrollViewer.VerticalScrollMode="Disabled" />
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Spacing="14">
+                    <Grid>
+                        <TextBlock Text="⭐ 口碑佳作" Style="{StaticResource SectionTitleStyle}" />
+                        <Button Content="按评分查看  ›" HorizontalAlignment="Right" FontSize="12.5"
+                                Foreground="{ThemeResource TextMutedBrush}" Background="Transparent"
+                                BorderThickness="0" Click="OnOpenTopRated" />
+                    </Grid>
+                    <GridView x:Name="TopRatedGrid" ItemTemplate="{StaticResource PosterCardTemplate}"
+                              ItemContainerStyle="{StaticResource CardItemStyle}"
+                              SelectionMode="None" ItemClick="OnPosterItemClick"
+                              ScrollViewer.VerticalScrollMode="Disabled"
+                              ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                </StackPanel>
+            </Grid>
+
+            <!-- ==================== 频道精选 ==================== -->
+            <StackPanel x:Name="CategorySections" Spacing="30" />
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>
