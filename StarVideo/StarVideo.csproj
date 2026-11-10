@@ -37,11 +37,18 @@
     <Content Include="Assets\**\*.jpg" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\**\*.png" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\**\*.ico" CopyToOutputDirectory="PreserveNewest" />
-    <None Remove="Tools\ffmpeg\ffmpeg.exe" />
-    <None Remove="Tools\ffmpeg\ffprobe.exe" />
     <Content Include="Assets\catalog.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- FFmpeg 静态构建随程序发布，用于任意格式的本地解码 / 转封装 / 元数据探测 -->
     <Content Include="Tools\ffmpeg\LICENSE" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Tools\ffmpeg\ffmpeg.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Tools\ffmpeg\ffprobe.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
