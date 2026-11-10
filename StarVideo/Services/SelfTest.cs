@@ -86,6 +86,40 @@ public static class SelfTest
         }
         catch (Exception ex) { log.AppendLine($"MEDIASOURCE FAIL {ex.Message}"); }
 
+        log.AppendLine("---- 版本比对 / Release 更新检查 ----");
+        var cases = new (string Latest, string Current, int Expected)[]
+        {
+            ("v1.2.3", "1.0.0", 1),
+            ("1.0.0", "v1.0.0", 0),
+            ("v1.0.0", "v1.0.1", -1),
+            ("v2.0.0-beta.1", "v2.0.0", -1),
+            ("v1.0.0", "v1.0.0-rc.1", 1),
+            ("v1.3", "1.2.9", 1),
+            ("v1.0.0+abc123", "v1.0.0", 0),
+            ("v1.10.0", "v1.9.9", 1),
+            ("v1.2.3-beta.2", "v1.2.3-beta.10", -1)
+        };
+        var passed = 0;
+        foreach (var c in cases)
+        {
+            var ok = AppVersion.TryParse(c.Latest, out var latest) &&
+                     AppVersion.TryParse(c.Current, out var current) &&
+                     Math.Sign(AppVersion.Compare(latest, current)) == c.Expected;
+            if (ok) passed++;
+            else log.AppendLine($"COMPARE FAIL {c.Latest} vs {c.Current} expect={c.Expected}");
+        }
+        log.AppendLine($"COMPARE {passed}/{cases.Length} OK");
+        log.AppendLine($"COMPARE unparsable={!AppVersion.TryParse("release-2026", out _)}");
+        log.AppendLine($"VERSION current={UpdateService.CurrentVersion} repo={UpdateService.DefaultRepo}");
+        try
+        {
+            var r = await UpdateService.CheckAsync(force: false);
+            log.AppendLine($"UPDATE repo={r.Repo} latest={r.LatestVersion ?? r.Release?.Tag ?? "-"} " +
+                           $"status={r.Status} cache={r.FromCache} assets={r.Release?.Assets.Count ?? 0} " +
+                           $"msg={r.Message}");
+        }
+        catch (Exception ex) { log.AppendLine($"UPDATE FAIL {ex.Message}"); }
+
         return log.ToString();
     }
 }

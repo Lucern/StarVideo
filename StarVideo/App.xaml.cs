@@ -10,6 +10,7 @@ public partial class App : Application
 {
     private Window? _window;
     private DispatcherTimer? _smokeTimer;
+    private DispatcherTimer? _updateTimer;
 
     public static MainWindow? MainWindow { get; private set; }
 
@@ -28,12 +29,88 @@ public partial class App : Application
         _window.Activate();
 
         var cli = Environment.GetCommandLineArgs();
+
+        // 开发用：伪造最新 Release 版本号，用来验证「发现新版本」界面（不发起真实请求）。
+        if (cli.FirstOrDefault(a => a.StartsWith("--fake-update=", StringComparison.OrdinalIgnoreCase)) is { } fake)
+            Services.UpdateService.SimulatedLatestVersion = fake.Substring("--fake-update=".Length);
+
         if (cli.Any(a => string.Equals(a, "--selftest", StringComparison.OrdinalIgnoreCase)))
             RunSelfTest();
         else if (cli.Any(a => string.Equals(a, "--smoke", StringComparison.OrdinalIgnoreCase)))
             RunSmokeTest();
+        else if (cli.Any(a => string.Equals(a, "--checkupdate", StringComparison.OrdinalIgnoreCase)))
+            RunUpdateCheck();
         else if (cli.FirstOrDefault(a => a.StartsWith("--goto=", StringComparison.OrdinalIgnoreCase)) is { } go)
             OpenPreviewPage(go.Substring(7));
+        else
+            ScheduleUpdateCheck();
+    }
+
+    /// <summary>
+    /// 正常双击 exe 启动时静默比对仓库 Release 版本号。
+    /// 所有 --xxx 命令行模式（自检 / 预览 / --checkupdate）都不做自动检查，避免干扰自动化。
+    /// </summary>
+    private void ScheduleUpdateCheck()
+    {
+        if (!Services.AppServices.User.AutoCheckUpdates) return;
+
+        _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+        _updateTimer.Tick += async (_, _) =>
+        {
+            _updateTimer.Stop();
+            try
+            {
+                var result = await Services.UpdateService.CheckAsync(force: false);
+                var queue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+                queue?.TryEnqueue(() =>
+                {
+                    MainWindow?.RefreshSettingsUpdate(result);
+                    if (result.IsUpdateAvailable && result.LatestVersion is { } version &&
+                        !string.Equals(version, Services.AppServices.User.LastNotifiedVersion,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        Services.AppServices.User.LastNotifiedVersion = version;
+                        var message = $"发现新版本 v{version}，前往「设置 → 版本更新」查看";
+                        Services.AppLog.Write("update.log", $"TOAST {message}");
+                        MainWindow?.ShowToast(message);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Services.AppLog.Write("update.log", $"启动检查异常：{ex.Message}");
+            }
+        };
+        _updateTimer.Start();
+    }
+
+    /// <summary>开发用：无界面跑一次真实检查并写日志后退出，便于 CI / 自动化取证。</summary>
+    private async void RunUpdateCheck()
+    {
+        var path = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "StarVideo", "update-check.log");
+        try
+        {
+            await Task.Delay(300);
+            var r = await Services.UpdateService.CheckAsync(force: true);
+            File.WriteAllText(path,
+                $"[StarVideo] 更新检查 {DateTime.Now:yyyy-MM-dd HH:mm:ss}\r\n" +
+                $"repo={r.Repo}\r\n" +
+                $"current={r.CurrentVersion}\r\n" +
+                $"latest={r.LatestVersion ?? r.Release?.Tag ?? "-"}\r\n" +
+                $"status={r.Status}\r\n" +
+                $"message={r.Message}\r\n" +
+                $"from_cache={r.FromCache}\r\n" +
+                $"simulated={r.Simulated}\r\n" +
+                $"assets={r.Release?.Assets.Count ?? 0}\r\n" +
+                "UPDATECHECK DONE\r\n");
+        }
+        catch (Exception ex)
+        {
+            File.WriteAllText(path, "UPDATECHECK FAIL\r\n" + ex);
+        }
+        _window?.Close();
     }
 
     /// <summary>开发用：完整功能自检，结果写 selftest.log 后自动退出。</summary>

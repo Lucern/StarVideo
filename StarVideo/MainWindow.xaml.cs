@@ -138,12 +138,13 @@ public sealed partial class MainWindow : Window
     {
         _hwnd = WindowNative.GetWindowHandle(this);
 
-        // 只有自动退出的自检 / 冒烟模式需要"点 X 直接退出"；
+        // 自动退出的无界面模式（自检 / 冒烟 / 更新检查）需要"点 X 直接退出"；
         // 其余（含 --goto= 页面预览）都保留正常的托盘关闭行为，方便验证。
         var cli = Environment.GetCommandLineArgs().Skip(1).ToArray();
         _trayCloseEnabled = !cli.Any(a =>
             string.Equals(a, "--selftest", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(a, "--smoke", StringComparison.OrdinalIgnoreCase));
+            string.Equals(a, "--smoke", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(a, "--checkupdate", StringComparison.OrdinalIgnoreCase));
 
         try
         {
@@ -477,6 +478,12 @@ public sealed partial class MainWindow : Window
 
     public void SetFullScreen(bool on) =>
         AppWindow.SetPresenter(on ? AppWindowPresenterKind.FullScreen : AppWindowPresenterKind.Overlapped);
+
+    /// <summary>启动时的静默更新检查完成后，若设置页正打开则即时刷新结果。</summary>
+    public void RefreshSettingsUpdate(UpdateCheckResult result)
+    {
+        if (ContentFrame.Content is SettingsPage page) page.OnStartupUpdateChecked(result);
+    }
 
     public void ShowToast(string message)
     {

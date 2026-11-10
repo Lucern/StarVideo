@@ -125,14 +125,115 @@
                 </StackPanel>
             </Border>
 
+            <!-- 版本更新：与 Git 仓库 Release 的版本号比对 -->
+            <Border Background="{ThemeResource SurfaceBrush}" CornerRadius="12" Padding="22,18">
+                <StackPanel Spacing="14">
+                    <Grid>
+                        <TextBlock Text="版本更新" FontSize="17" FontWeight="SemiBold"
+                                   Foreground="{ThemeResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12">
+                            <ProgressRing x:Name="UpdateRing" Width="18" Height="18" IsActive="False" />
+                            <Button x:Name="CheckUpdateButton" Content="检查更新"
+                                    Style="{StaticResource ChipButtonStyle}" Click="OnCheckUpdate" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock x:Name="UpdateStatusText" Text="尚未检查更新" FontSize="13"
+                               Foreground="{ThemeResource TextSecondaryBrush}" TextWrapping="Wrap" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Spacing="3">
+                            <TextBlock Text="当前版本" FontSize="11.5"
+                                       Foreground="{ThemeResource TextMutedBrush}" />
+                            <TextBlock x:Name="CurrentVersionText" Text="-" FontSize="14"
+                                       Foreground="{ThemeResource TextPrimaryBrush}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="3">
+                            <TextBlock Text="仓库最新版本" FontSize="11.5"
+                                       Foreground="{ThemeResource TextMutedBrush}" />
+                            <TextBlock x:Name="LatestVersionText" Text="-" FontSize="14"
+                                       Foreground="{ThemeResource TextPrimaryBrush}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="3">
+                            <TextBlock Text="上次检查" FontSize="11.5"
+                                       Foreground="{ThemeResource TextMutedBrush}" />
+                            <TextBlock x:Name="LastCheckText" Text="-" FontSize="14"
+                                       Foreground="{ThemeResource TextPrimaryBrush}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 仅在发现新版本时展开 -->
+                    <Border x:Name="UpdateNoticeBorder" Visibility="Collapsed"
+                            Background="#1AFF7A18" BorderBrush="{ThemeResource AccentBrush}"
+                            BorderThickness="1" CornerRadius="8" Padding="14,12">
+                        <StackPanel Spacing="9">
+                            <TextBlock x:Name="NewVersionTitle" Text="" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{ThemeResource TextPrimaryBrush}" />
+                            <TextBlock x:Name="NewVersionMeta" Text="" FontSize="11.5"
+                                       Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" />
+                            <TextBlock x:Name="ReleaseNotesText" Text="" FontSize="12"
+                                       Foreground="{ThemeResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button x:Name="OpenReleaseButton" Content="前往发布页"
+                                        Style="{StaticResource AccentButtonStyle}" Click="OnOpenRelease" />
+                                <Button x:Name="DownloadAssetButton" Content="下载安装包"
+                                        Style="{StaticResource ChipButtonStyle}" Click="OnDownloadAsset"
+                                        Visibility="Collapsed" />
+                                <Button Content="全部 Release" Style="{StaticResource ChipButtonStyle}"
+                                        Click="OnOpenAllReleases" />
+                            </StackPanel>
+                            <ProgressBar x:Name="DownloadProgressBar" Visibility="Collapsed"
+                                         Minimum="0" Maximum="1" Value="0" />
+                            <TextBlock x:Name="DownloadStatusText" Text="" FontSize="11.5"
+                                       Visibility="Collapsed" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextMutedBrush}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Height="1" Background="{ThemeResource BorderBrush}" />
+                    <Grid>
+                        <StackPanel Spacing="4" Margin="0,0,24,0">
+                            <TextBlock Text="启动时自动检查" FontSize="13.5"
+                                       Foreground="{ThemeResource TextPrimaryBrush}" />
+                            <TextBlock Text="静默比对仓库 Release 版本号，发现新版本时提示一次；6 小时内不重复请求。"
+                                       FontSize="11.5" Foreground="{ThemeResource TextMutedBrush}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ToggleSwitch x:Name="AutoUpdateSwitch" HorizontalAlignment="Right"
+                                      OnContent="" OffContent="" Toggled="OnAutoUpdateToggled" />
+                    </Grid>
+
+                    <TextBlock Text="GitHub 仓库（Release 版本号比对来源）" FontSize="12.5"
+                               Foreground="{ThemeResource TextPrimaryBrush}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="UpdateRepoBox" Grid.Column="0" Margin="0,0,10,0"
+                                 PlaceholderText="Lucern/StarVideo（留空恢复默认）" />
+                        <Button Grid.Column="1" Content="应用并重新检查"
+                                Style="{StaticResource ChipButtonStyle}" Click="OnApplyUpdateRepo" />
+                    </Grid>
+                    <TextBlock Text="通过 GitHub Releases API 读取最新非草稿、非预发布 Release 的 tag，按语义化版本比对。未认证访问限额 60 次/小时，已用 ETag 与本地缓存节流。检查只做提示，下载的更新包保存在本机数据目录，不会自动覆盖正在运行的程序。"
+                               FontSize="11.5" Foreground="{ThemeResource TextMutedBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
             <!-- 关于 -->
             <Border Background="{ThemeResource SurfaceBrush}" CornerRadius="12" Padding="22,18">
                 <StackPanel Spacing="10">
                     <TextBlock Text="关于" FontSize="17" FontWeight="SemiBold"
                                Foreground="{ThemeResource TextPrimaryBrush}" />
-                    <TextBlock Text="星影视频  v1.0.0" FontSize="14"
+                    <TextBlock x:Name="AboutVersionText" Text="星影视频" FontSize="14"
                                Foreground="{ThemeResource TextPrimaryBrush}" />
-                    <TextBlock Text="基于 WinUI 3 / Windows App SDK 1.8 / .NET 8 构建的桌面影音客户端界面演示。"
+                    <TextBlock Text="基于 WinUI 3 / Windows App SDK 2.6.5 / .NET 8 构建的桌面影音客户端界面演示。"
                                Style="{StaticResource BodyTextStyle}" />
                     <TextBlock Text="片名、海报、焦点图、评分与简介均为本地生成的原创虚构素材，与任何真实平台、作品或人物无关；除用户主动播放的公开测试视频外不连接任何服务，不采集数据。"
                                Style="{StaticResource BodyTextStyle}" TextWrapping="Wrap" />

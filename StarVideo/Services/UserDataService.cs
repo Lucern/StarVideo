@@ -17,6 +17,12 @@ public sealed class UserDataService
         public string FFmpegPath { get; set; } = "";
         /// <summary>本地视频是否强制经过 FFmpeg 转码后再播放。</summary>
         public bool ForceFFmpeg { get; set; }
+        /// <summary>版本更新检查的 GitHub 仓库（owner/repo），留空用项目默认仓库。</summary>
+        public string UpdateRepo { get; set; } = "";
+        /// <summary>启动时是否静默检查更新。</summary>
+        public bool AutoCheckUpdates { get; set; } = true;
+        /// <summary>已经用 Toast 提示过的版本号，避免每次启动重复打扰。</summary>
+        public string LastNotifiedVersion { get; set; } = "";
     }
 
     private static readonly string FilePath = Path.Combine(
@@ -43,6 +49,9 @@ public sealed class UserDataService
     public bool AutoPlayNext { get => _data.AutoPlayNext; set { _data.AutoPlayNext = value; Save(); } }
     public string FFmpegPath { get => _data.FFmpegPath; set { _data.FFmpegPath = value; Save(); } }
     public bool ForceFFmpeg { get => _data.ForceFFmpeg; set { _data.ForceFFmpeg = value; Save(); } }
+    public string UpdateRepo { get => _data.UpdateRepo; set { _data.UpdateRepo = value; Save(); } }
+    public bool AutoCheckUpdates { get => _data.AutoCheckUpdates; set { _data.AutoCheckUpdates = value; Save(); } }
+    public string LastNotifiedVersion { get => _data.LastNotifiedVersion; set { _data.LastNotifiedVersion = value; Save(); } }
 
     public bool IsFavorite(string id) => _data.Favorites.Contains(id, StringComparer.OrdinalIgnoreCase);
 
